@@ -11,7 +11,8 @@ build/
 venv/
 env/
 *.log
-*.jsonl
+# Keep eval logs tracked — exclude only runtime-generated trace files
+eval/tau2_runs/
 node_modules/
 .DS_Store
 *.pdf

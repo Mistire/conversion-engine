@@ -1,0 +1,25 @@
+[
+  {
+    "run_id": "scaffold-placeholder",
+    "model": "qwen/qwen3-235b-a22b-openrouter",
+    "domain": "retail",
+    "slice": "dev",
+    "num_trials": 0,
+    "num_tasks": 30,
+    "total_task_trials": 0,
+    "successes": 0,
+    "pass_at_1_mean": null,
+    "pass_at_1_ci_lo": null,
+    "pass_at_1_ci_hi": null,
+    "wall_clock_s": 0,
+    "timestamp": "2026-04-22T00:00:00",
+    "note": "Scaffold entry. Run `python eval/baseline_runner.py` with OPENROUTER_API_KEY set to populate real results.",
+    "published_reference": {
+      "model": "GPT-5 class",
+      "domain": "retail",
+      "pass_at_1": 0.42,
+      "source": "tau2-bench leaderboard, Feb 2026",
+      "url": "https://taubench.com"
+    }
+  }
+]

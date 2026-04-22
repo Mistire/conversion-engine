@@ -1,0 +1,85 @@
+{
+  "total_interactions": 9,
+  "p50_latency_ms": 608,
+  "p95_latency_ms": 936,
+  "avg_latency_ms": 387.7,
+  "results": [
+    {
+      "prospect": "Alex Chen",
+      "company": "Shopify",
+      "icp_segment": "no_match",
+      "ai_maturity": 0,
+      "variant": "research_grounded",
+      "latency_ms": 936,
+      "trace_id": "a9e9ec7b-0e4a-40bd-9472-fe2ffd4e4cf6"
+    },
+    {
+      "prospect": "Maria Santos",
+      "company": "Stripe",
+      "icp_segment": "no_match",
+      "ai_maturity": 0,
+      "variant": "research_grounded",
+      "latency_ms": 648,
+      "trace_id": "4f7105fb-7b7f-4b2f-a4a8-4574281cff0c"
+    },
+    {
+      "prospect": "James Park",
+      "company": "Figma",
+      "icp_segment": "no_match",
+      "ai_maturity": 0,
+      "variant": "research_grounded",
+      "latency_ms": 608,
+      "trace_id": "0b1d14f7-226a-4f77-92e3-31fa5f631808"
+    },
+    {
+      "prospect": "Priya Patel",
+      "company": "OpenAI",
+      "icp_segment": "no_match",
+      "ai_maturity": 0,
+      "variant": "research_grounded",
+      "latency_ms": 626,
+      "trace_id": "9b0052bb-fdf8-4ca3-9a17-9840cd0e7434"
+    },
+    {
+      "prospect": "David Kim",
+      "company": "Notion",
+      "icp_segment": "no_match",
+      "ai_maturity": 0,
+      "variant": "research_grounded",
+      "latency_ms": 671,
+      "trace_id": "07dbf671-d124-4633-b389-9561c34c2670"
+    },
+    {
+      "prospect": "Alex Chen",
+      "company": "Shopify",
+      "event": "email_reply_handled",
+      "variant": "llm_reply",
+      "latency_ms": 0,
+      "trace_id": "178aa00c-a023-44df-a769-f3b5606dce27"
+    },
+    {
+      "prospect": "Maria Santos",
+      "company": "Stripe",
+      "event": "email_reply_handled",
+      "variant": "llm_reply",
+      "latency_ms": 0,
+      "trace_id": "be5268c7-211d-4d56-804f-2f547842ba2d"
+    },
+    {
+      "prospect": "James Park",
+      "company": "Figma",
+      "event": "email_reply_handled",
+      "variant": "booking_offer",
+      "latency_ms": 0,
+      "trace_id": "64b535de-32a4-4a7b-8ffd-674eb9276fc4"
+    },
+    {
+      "prospect": "Priya Patel",
+      "company": "OpenAI",
+      "event": "email_reply_handled",
+      "variant": "llm_reply",
+      "latency_ms": 0,
+      "trace_id": "af069582-0136-426a-a2f6-bac18b871e09"
+    }
+  ]
+}

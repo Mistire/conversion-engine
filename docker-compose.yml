@@ -1,0 +1,37 @@
+services:
+  calcom:
+    image: calcom/cal.com:latest
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: postgresql://calcom:calcom@calcom-db:5432/calcom
+      NEXTAUTH_SECRET: your-nextauth-secret-change-me
+      CALENDSO_ENCRYPTION_KEY: your-32-char-encryption-key-here!!
+      NEXT_PUBLIC_WEBAPP_URL: http://localhost:3000
+      EMAIL_FROM: noreply@tenacious.io
+      EMAIL_SERVER_HOST: localhost
+      EMAIL_SERVER_PORT: 1025
+    depends_on:
+      calcom-db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  calcom-db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: calcom
+      POSTGRES_PASSWORD: calcom
+      POSTGRES_DB: calcom
+    volumes:
+      - calcom_db_data:/var/lib/postgresql/data
+    ports:
+      - "5435:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U calcom"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+volumes:
+  calcom_db_data:
