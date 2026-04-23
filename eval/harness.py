@@ -113,81 +113,80 @@ def run_tau2_trial(
     Returns list of per-task result dicts with trace_id, passed, task_id.
     """
     tau2_bin = TAU2_DIR / ".venv" / "bin" / "tau2"
-    if not tau2_bin.exists():
-        # Fallback: try uv run
-        tau2_bin = None
+    save_to = EVAL_DIR / "tau2_runs" / f"trial_{trial_index}"
+    save_to.mkdir(parents=True, exist_ok=True)
 
     cmd = [
-        str(tau2_bin) if tau2_bin else "tau2",
+        str(tau2_bin),
         "run",
         "--domain", domain,
         "--agent-llm", model,
         "--user-llm", model,
         "--num-trials", "1",
         "--num-tasks", str(num_tasks),
-        "--output-dir", str(EVAL_DIR / "tau2_runs" / f"trial_{trial_index}"),
+        "--save-to", str(save_to),
+        "--auto-resume",
     ]
 
+    # task-ids are space-separated positional args after the flag
     if task_ids:
-        cmd += ["--task-ids", ",".join(map(str, task_ids))]
+        cmd += ["--task-ids"] + [str(t) for t in task_ids]
 
     try:
         proc = subprocess.run(
             cmd,
             cwd=str(TAU2_DIR),
-            capture_output=True,
+            capture_output=False,   # let output stream to terminal
             text=True,
-            timeout=1800,  # 30 min max per trial
+            timeout=1800,
         )
-        stdout = proc.stdout
-        stderr = proc.stderr
     except subprocess.TimeoutExpired:
+        print("[harness] trial timed out", file=sys.stderr)
         return []
-    except FileNotFoundError:
-        print("[harness] tau2 CLI not found — using uv run tau2", file=sys.stderr)
-        cmd[0] = "uv"
-        cmd.insert(1, "run")
-        cmd.insert(2, "tau2")
-        try:
-            proc = subprocess.run(cmd, cwd=str(TAU2_DIR), capture_output=True, text=True, timeout=1800)
-            stdout = proc.stdout
-            stderr = proc.stderr
-        except Exception as e:
-            print(f"[harness] tau2 run failed: {e}", file=sys.stderr)
-            return []
+    except Exception as e:
+        print(f"[harness] tau2 run failed: {e}", file=sys.stderr)
+        return []
 
-    # Parse results from output dir
-    output_dir = EVAL_DIR / "tau2_runs" / f"trial_{trial_index}"
+    # tau2 writes a single results.json inside the save-to directory
+    results_file = save_to / "results.json"
     results = []
-    if output_dir.exists():
-        for result_file in sorted(output_dir.glob("*.json")):
-            try:
-                with open(result_file) as f:
-                    data = json.load(f)
-                task_id = data.get("task_id", result_file.stem)
-                passed = data.get("reward", data.get("score", 0)) >= 1.0
-                trace_id = data.get("trace_id", str(uuid.uuid4()))
-                results.append({
-                    "task_id": task_id,
-                    "passed": passed,
-                    "reward": data.get("reward", data.get("score", 0)),
-                    "trace_id": trace_id,
-                    "trial": trial_index,
-                    "raw": data,
-                })
-                # Write full trace to JSONL
-                append_trace({
-                    "trace_id": trace_id,
-                    "task_id": task_id,
-                    "trial": trial_index,
-                    "passed": passed,
-                    "timestamp": datetime.utcnow().isoformat(),
-                    "model": model,
-                    "domain": domain,
-                    "raw": data,
-                })
-            except Exception:
-                continue
+    if not results_file.exists():
+        print(f"[harness] results.json not found at {results_file}", file=sys.stderr)
+        return []
+
+    try:
+        with open(results_file) as f:
+            data = json.load(f)
+    except Exception as e:
+        print(f"[harness] failed to parse results.json: {e}", file=sys.stderr)
+        return []
+
+    for sim in data.get("simulations", []):
+        task_id = str(sim.get("task_id", "unknown"))
+        reward = sim.get("reward_info", {}).get("reward", 0)
+        passed = reward >= 1.0
+        trace_id = sim.get("id", str(uuid.uuid4()))
+
+        results.append({
+            "task_id": task_id,
+            "passed": passed,
+            "reward": reward,
+            "trace_id": trace_id,
+            "trial": trial_index,
+            "raw": sim,
+        })
+        append_trace({
+            "trace_id": trace_id,
+            "task_id": task_id,
+            "trial": trial_index,
+            "passed": passed,
+            "reward": reward,
+            "timestamp": datetime.utcnow().isoformat(),
+            "model": model,
+            "domain": domain,
+            "duration_s": sim.get("duration"),
+            "termination_reason": sim.get("termination_reason"),
+        })
 
     return results
 

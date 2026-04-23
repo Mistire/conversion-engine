@@ -21,5 +21,21 @@
       "source": "tau2-bench leaderboard, Feb 2026",
       "url": "https://taubench.com"
     }
+  },
+  {
+    "run_id": "b64f2851-fa05-407e-83ad-41177dec6f3b",
+    "model": "openrouter/qwen/qwen3-235b-a22b",
+    "domain": "retail",
+    "slice": "dev",
+    "num_trials": 5,
+    "num_tasks": 0,
+    "total_task_trials": 0,
+    "successes": 0,
+    "pass_at_1_mean": 0.0,
+    "pass_at_1_ci_lo": 0.0,
+    "pass_at_1_ci_hi": 0.0,
+    "wall_clock_s": 50.0,
+    "timestamp": "2026-04-23T19:02:09.482011",
+    "per_task_pass_rate": {}
   }
 ]
