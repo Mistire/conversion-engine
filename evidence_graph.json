@@ -1,0 +1,191 @@
+{
+  "generated_at": "2026-04-25",
+  "author": "Mistire Daniel — mistire@10academy.org",
+  "purpose": "Maps every numeric claim in memo.md to its authoritative source file, key, and value.",
+  "memo_claims": [
+    {
+      "claim_id": "C01",
+      "claim_text": "pass@1 = 0.2979, 95% CI [0.2148, 0.3968]",
+      "value": 0.2979,
+      "ci_95": [0.2148, 0.3968],
+      "source_file": "eval/score_log.json",
+      "source_key": "run_id: a3a0b77e-5652-4e90-b64a-f1b279ec4800 → pass_at_1_mean / pass_at_1_ci_lo / pass_at_1_ci_hi",
+      "source_type": "trace_file",
+      "memo_section": "τ²-Bench Baseline"
+    },
+    {
+      "claim_id": "C02",
+      "claim_text": "SOTA reference (GPT-5 class, Feb 2026) ~42%",
+      "value": 0.42,
+      "source_file": "eval/score_log.json",
+      "source_key": "run_id: scaffold-placeholder → published_reference.pass_at_1",
+      "source_type": "published_reference",
+      "external_url": "https://taubench.com",
+      "memo_section": "τ²-Bench Baseline"
+    },
+    {
+      "claim_id": "C03",
+      "claim_text": "94 of 150 task-trials completed (56 timed out)",
+      "value": 94,
+      "source_file": "eval/score_log.json",
+      "source_key": "run_id: a3a0b77e-5652-4e90-b64a-f1b279ec4800 → total_task_trials / note",
+      "source_type": "trace_file",
+      "memo_section": "τ²-Bench Baseline"
+    },
+    {
+      "claim_id": "C04",
+      "claim_text": "p50 task duration 85.9 s, p95 task duration 201.0 s",
+      "value": { "p50_s": 85.92, "p95_s": 200.96 },
+      "source_file": "eval/score_log.json",
+      "source_key": "run_id: a3a0b77e-5652-4e90-b64a-f1b279ec4800 → p50_task_duration_s / p95_task_duration_s",
+      "source_type": "trace_file",
+      "memo_section": "τ²-Bench Baseline"
+    },
+    {
+      "claim_id": "C05",
+      "claim_text": "git commit d11a97072c",
+      "value": "d11a97072c49d093f7b5a3e4fe9da95b490d43ba",
+      "source_file": "eval/score_log.json",
+      "source_key": "run_id: a3a0b77e-5652-4e90-b64a-f1b279ec4800 → git_commit",
+      "source_type": "trace_file",
+      "memo_section": "τ²-Bench Baseline"
+    },
+    {
+      "claim_id": "C06",
+      "claim_text": "OpenRouter weekly spend $12.75",
+      "value": 12.75,
+      "source_file": "OpenRouter dashboard invoice — week of 2026-04-19 to 2026-04-25",
+      "source_key": "invoice total",
+      "source_type": "invoice",
+      "memo_section": "Cost per Qualified Lead"
+    },
+    {
+      "claim_id": "C07",
+      "claim_text": "11 qualified leads in e2e run",
+      "value": 11,
+      "source_file": "eval/e2e_test_results.json",
+      "source_key": "results[*].icp_confidence == 'high' AND event == 'outreach' (count)",
+      "source_type": "trace_file",
+      "memo_section": "Cost per Qualified Lead"
+    },
+    {
+      "claim_id": "C08",
+      "claim_text": "Cost per qualified lead ~$0.11",
+      "value": 0.11,
+      "derivation": "($12.75 total spend × 0.10 e2e attribution) / 11 qualified leads = $1.275 / 11 = $0.116",
+      "source_files": ["eval/e2e_test_results.json", "OpenRouter invoice"],
+      "source_type": "derived",
+      "memo_section": "Cost per Qualified Lead"
+    },
+    {
+      "claim_id": "C09",
+      "claim_text": "p50 e2e latency 3,625 ms, p95 e2e latency 14,392 ms",
+      "value": { "p50_ms": 3625, "p95_ms": 14392 },
+      "source_file": "eval/e2e_test_results.json",
+      "source_key": "p50_latency_ms / p95_latency_ms",
+      "source_type": "trace_file",
+      "memo_section": "Speed-to-Lead Delta"
+    },
+    {
+      "claim_id": "C10",
+      "claim_text": "20 total interactions in e2e test, 12 outreach events, 8 replies",
+      "value": { "total_interactions": 20, "outreach": 12, "replies": 8 },
+      "source_file": "eval/e2e_test_results.json",
+      "source_key": "total_interactions / results[*].event counts",
+      "source_type": "trace_file",
+      "memo_section": "Speed-to-Lead Delta"
+    },
+    {
+      "claim_id": "C11",
+      "claim_text": "Stalled-thread rate 30–40% (Tenacious manual process)",
+      "value": "30–40%",
+      "source_file": "TRP1 Challenge Week 10_ Conversion Engine for Sales Automation.md",
+      "source_key": "Baseline numbers table → Stalled-thread rate, current manual process",
+      "source_type": "client_provided",
+      "memo_section": "Speed-to-Lead Delta"
+    },
+    {
+      "claim_id": "C12",
+      "claim_text": "11 of 12 outreach (92%) were research-grounded; 1 (8%) was generic abstention",
+      "value": { "research_grounded": 11, "generic": 1, "total_outreach": 12 },
+      "source_file": "eval/e2e_test_results.json",
+      "source_key": "results[*].variant == 'research_grounded' | 'generic_pitch' (event == 'outreach')",
+      "source_type": "trace_file",
+      "memo_section": "Competitive-Gap Outbound Performance"
+    },
+    {
+      "claim_id": "C13",
+      "claim_text": "8 of 11 research-grounded outreach generated synthetic replies (73%)",
+      "value": 0.727,
+      "source_file": "eval/e2e_test_results.json",
+      "source_key": "results[*].event == 'email_reply' (count) / research_grounded outreach count",
+      "source_type": "trace_file",
+      "note": "Synthetic test respondents — not real-world reply rate",
+      "memo_section": "Competitive-Gap Outbound Performance"
+    },
+    {
+      "claim_id": "C14",
+      "claim_text": "Industry benchmark: signal-grounded reply rate 7–12%, generic 1–3%",
+      "value": { "signal_grounded_pct": "7–12%", "generic_pct": "1–3%" },
+      "source_file": "TRP1 Challenge Week 10_ Conversion Engine for Sales Automation.md",
+      "source_key": "Baseline numbers table → B2B outbound cold-email reply rate / Signal-grounded outbound reply rate",
+      "source_type": "published_reference",
+      "memo_section": "Competitive-Gap Outbound Performance"
+    },
+    {
+      "claim_id": "C15",
+      "claim_text": "ΔA = +20 pp (probe pass rate 80% → 100%)",
+      "value": 0.20,
+      "source_file": "eval/probe_results.json",
+      "source_key": "delta_a / baseline_pass_rate / treatment_pass_rate",
+      "source_type": "trace_file",
+      "memo_section": "Act IV — Honesty Gate (referenced in Executive Summary)"
+    },
+    {
+      "claim_id": "C16",
+      "claim_text": "Honesty gate: zero additional LLM calls, < 1 ms added latency",
+      "value": { "extra_llm_calls": 0, "added_latency_ms": "<1" },
+      "source_file": "agent/honesty_gate.py",
+      "source_key": "build_constraints() — pure Python dict lookups, no network I/O",
+      "source_type": "code",
+      "memo_section": "Executive Summary"
+    },
+    {
+      "claim_id": "C17",
+      "claim_text": "36 bench engineers total (26 on paid engagements)",
+      "value": { "total": 36, "on_engagement": 26, "available": 10 },
+      "source_file": "docs/tenacious_sales_data/seed/bench_summary.json",
+      "source_key": "total_engineers / on_engagement / available",
+      "source_type": "client_provided",
+      "memo_section": "Evidence table"
+    },
+    {
+      "claim_id": "C18",
+      "claim_text": "12 of 12 outreach routed to staff sink; honesty gate fired on all 12",
+      "value": { "routed_to_sink": 12, "honesty_gate_fired": 12 },
+      "source_file": "eval/e2e_test_results.json",
+      "source_key": "routed_to_sink_count / honesty_gate_fired_count",
+      "source_type": "trace_file",
+      "memo_section": "Act II — Production Stack"
+    },
+    {
+      "claim_id": "C19",
+      "claim_text": "SDR volume target ~60 outreach/week",
+      "value": 60,
+      "source_file": "TRP1 Challenge Week 10_ Conversion Engine for Sales Automation.md",
+      "source_key": "Sales Jargon → SDR work (outbound) → volume target",
+      "source_type": "client_provided",
+      "memo_section": "Pilot Scope Recommendation"
+    },
+    {
+      "claim_id": "C20",
+      "claim_text": "AI maturity scoring false-negative rate ~15–20%, false-positive rate ~10–15%",
+      "value": { "false_negative_pct": "15–20%", "false_positive_pct": "10–15%" },
+      "source_file": "probes/probe_library.md",
+      "source_key": "Signal reliability probes — spot-check of 10 Crunchbase ODM records",
+      "source_type": "probe_analysis",
+      "note": "Qualitative estimate from probe authoring; full hand-labeling not completed within challenge week",
+      "memo_section": "Public-Signal Lossiness"
+    }
+  ]
+}

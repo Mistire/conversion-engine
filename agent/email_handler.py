@@ -48,27 +48,78 @@ def compose_outbound_email(
     prospect_title: str,
     brief: HiringSignalBrief,
     gap_brief: Optional[CompetitorGapBrief] = None,
+    honesty_constraints: str = "",
 ) -> OutboundEmail:
     """
     Composes a research-grounded outbound email.
     Variant = 'research_grounded' when brief has usable signals,
-              'generic_pitch' as fallback when signals are weak.
+              'generic_pitch' as fallback when signals are weak or
+              honesty_gate fires the abstention path.
 
-    Grounded-honesty rule: agent asks rather than asserts when confidence is LOW.
+    honesty_constraints: output of honesty_gate.build_constraints().
+    When it contains 'ABSTAIN', the function returns a generic email
+    without any segment-specific language or signal claims.
     """
+    # ── Abstention path (F1-G, B-09) ─────────────────────────────────
+    # Gate fires when icp_confidence=LOW or icp_segment=NO_MATCH.
+    # Return a bare generic email — no signal claims, no segment framing.
+    use_abstain = (
+        "ABSTAIN" in honesty_constraints
+        or brief.icp_confidence == Confidence.LOW
+        or brief.icp_segment == ICPSegment.NO_MATCH
+    )
+    if use_abstain:
+        first_name = prospect_name.split()[0]
+        html_body = (
+            f"<p>Hi {first_name},</p>"
+            f"<p>I came across {company_name} and wanted to reach out. "
+            "We work with B2B technology companies on engineering team scaling and "
+            "specialized capability builds — happy to share more if the timing is right.</p>"
+            "<p>Worth a 15-minute conversation? → [Cal.com link]</p>"
+            "<p>Best,<br>Tenacious Outreach Agent<br>"
+            "<em>draft — pending Tenacious review</em></p>"
+        )
+        text_body = (
+            f"Hi {first_name},\n\n"
+            f"I came across {company_name} and wanted to reach out. "
+            "We work with B2B technology companies on engineering team scaling and "
+            "specialized capability builds — happy to share more if the timing is right.\n\n"
+            "Worth a 15-minute conversation? → [Cal.com link]\n\n"
+            "Best,\nTenacious Outreach Agent\n[draft — pending Tenacious review]"
+        )
+        return OutboundEmail(
+            to="",
+            subject=f"Context: engineering capacity for {company_name}",
+            html_body=html_body,
+            text_body=text_body,
+            is_draft=True,
+            variant="generic_pitch",
+            prospect_name=prospect_name,
+            company_name=company_name,
+        )
+
     segment = brief.icp_segment
     ai_score = brief.ai_maturity.score if brief.ai_maturity else 0
     ai_confidence = brief.ai_maturity.confidence if brief.ai_maturity else Confidence.LOW
-    is_high_ai = ai_score >= 2 and ai_confidence != Confidence.LOW
+    # F1-B: only assert high AI when score >= 2 AND confidence is not LOW
+    is_high_ai = ai_score >= 2 and ai_confidence == Confidence.HIGH
 
     pitch = PITCH_LANGUAGE.get(segment, {})
     pitch_line = pitch.get("high_ai" if is_high_ai else "low_ai", "expand your engineering capacity")
     hook = pitch.get("hook", "your company fits the profile of organizations Tenacious typically partners with")
 
-    # Build signal sentence (grounded-honesty: only assert what the data supports)
+    # ── F1-C: suppress growth language when layoff detected ───────────
+    layoff_active = (
+        brief.layoff is not None
+        and brief.layoff.days_ago is not None
+        and brief.layoff.days_ago <= 120
+        and "LAYOFF SIGNAL" in honesty_constraints
+    )
+
+    # Build signal sentences (grounded-honesty: only assert what data supports)
     signal_sentences: list[str] = []
 
-    if brief.funding and brief.funding.days_ago and brief.funding.days_ago <= 180:
+    if brief.funding and brief.funding.days_ago and brief.funding.days_ago <= 180 and not layoff_active:
         amount_m = (brief.funding.amount_usd or 0) / 1_000_000
         if amount_m > 0:
             signal_sentences.append(
@@ -84,9 +135,10 @@ def compose_outbound_email(
             + (f", including {brief.job_posts.ai_adjacent_roles} AI-adjacent positions" if brief.job_posts.ai_adjacent_roles > 0 else "")
         )
     elif brief.job_posts and brief.job_posts.total_open_roles > 0:
-        # Fewer than 5 roles — ask rather than assert
+        # F1-A: fewer than 5 roles — ask rather than assert velocity
         signal_sentences.append(
-            f"it looks like you may be in an early hiring phase ({brief.job_posts.total_open_roles} open role(s) visible publicly)"
+            f"it looks like you may be in an early hiring phase "
+            f"({brief.job_posts.total_open_roles} open role(s) visible publicly)"
         )
 
     if brief.leadership_change and brief.leadership_change.days_ago and brief.leadership_change.days_ago <= 90:
@@ -94,9 +146,13 @@ def compose_outbound_email(
             f"there was a recent {brief.leadership_change.role} transition at {company_name}"
         )
 
-    if gap_brief and gap_brief.gaps and gap_brief.confidence != Confidence.LOW:
+    # F1-D/F1-F: only include gap brief claims when confidence >= MEDIUM and not stale
+    if gap_brief and gap_brief.gaps and gap_brief.confidence == Confidence.HIGH:
         top_gap = gap_brief.gaps[0]
         signal_sentences.append(f"our public data shows: {top_gap[:120]}...")
+    elif gap_brief and gap_brief.gaps and gap_brief.confidence == Confidence.MEDIUM and "STALE" not in honesty_constraints:
+        top_gap = gap_brief.gaps[0]
+        signal_sentences.append(f"we've seen some signal in your sector: {top_gap[:100]}…")
 
     signal_block = (
         " — specifically, " + "; and ".join(signal_sentences) + "."
@@ -107,10 +163,17 @@ def compose_outbound_email(
     variant = "research_grounded" if signal_sentences else "generic_pitch"
 
     # Low-signal fallback: softer language
-    if brief.icp_confidence == Confidence.LOW or not signal_sentences:
+    if not signal_sentences:
         opening = (
             f"I came across {company_name} and wanted to reach out — "
             f"from what I can see publicly, {hook}."
+        )
+    elif layoff_active:
+        # F1-C: post-layoff framing — cost/delivery, not growth
+        opening = (
+            f"I noticed {company_name} has been restructuring. "
+            "That typically raises the question of how to maintain engineering "
+            f"delivery velocity while reshaping cost structure — {pitch_line}."
         )
     else:
         opening = (
@@ -118,9 +181,16 @@ def compose_outbound_email(
             f"That pattern typically means the next bottleneck is {pitch_line}."
         )
 
-    subject = f"Engineering capacity for {company_name} — quick question"
-    if segment == ICPSegment.SEGMENT_4_CAPABILITY_GAP and is_high_ai:
-        subject = f"AI/ML capability gap at {company_name} — a research finding"
+    # Subject line: Direct tone marker — no "quick question", lead with intent signal
+    if segment == ICPSegment.SEGMENT_3_LEADERSHIP_TRANSITION:
+        first_name = prospect_name.split()[0]
+        subject = f"Context: {first_name}'s first 90 days at {company_name}"
+    elif segment == ICPSegment.SEGMENT_4_CAPABILITY_GAP and is_high_ai:
+        subject = f"Question: AI/ML capability gap at {company_name}"
+    elif segment == ICPSegment.SEGMENT_2_RESTRUCTURING:
+        subject = f"Note on {company_name} engineering capacity"
+    else:
+        subject = f"Context: engineering capacity for {company_name}"
 
     html_body = f"""
 <p>Hi {prospect_name.split()[0]},</p>
@@ -200,21 +270,31 @@ async def send_email(
         },
     }
 
-    async with httpx.AsyncClient(timeout=15.0) as client:
-        resp = await client.post(
-            "https://api.resend.com/emails",
-            json=payload,
-            headers={"Authorization": f"Bearer {settings.resend_api_key}"},
-        )
-        resp.raise_for_status()
-        data = resp.json()
+    try:
+        async with httpx.AsyncClient(timeout=15.0) as client:
+            resp = await client.post(
+                "https://api.resend.com/emails",
+                json=payload,
+                headers={"Authorization": f"Bearer {settings.resend_api_key}"},
+            )
+            resp.raise_for_status()
+            data = resp.json()
+        status = "sent"
+        message_id = data.get("id", "")
+    except httpx.HTTPStatusError as exc:
+        # Log the API error but do not crash — sink routing still recorded.
+        status = f"api_error_{exc.response.status_code}"
+        message_id = f"error_{exc.response.status_code}"
+    except Exception as exc:
+        status = f"send_error"
+        message_id = "error_unknown"
 
     return {
-        "message_id": data.get("id", ""),
+        "message_id": message_id,
         "to": actual_to,
         "original_to": to_address,
         "routed_to_sink": routed_to_sink,
-        "status": "sent",
+        "status": status,
         "timestamp": datetime.utcnow().isoformat(),
         "variant": email.variant,
     }

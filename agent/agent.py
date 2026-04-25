@@ -35,6 +35,7 @@ from agent.hubspot_client import (
     upsert_contact, log_email_activity, log_sms_activity, mark_discovery_call_booked,
 )
 from agent.calcom_client import get_available_slots, create_booking, format_slots_list
+from agent.honesty_gate import build_constraints, should_abstain
 
 settings = get_settings()
 
@@ -153,13 +154,15 @@ async def initiate_outreach(prospect: ProspectContact) -> dict:
     prospect.hiring_signal_brief = brief
     prospect.competitor_gap_brief = gap_brief
 
-    # Step 3: Compose email
+    # Step 3: Compose email — gate fires before composition
+    honesty_constraints = build_constraints(brief, gap_brief)
     email = compose_outbound_email(
         prospect_name=prospect.name,
         company_name=prospect.company_name,
         prospect_title=prospect.title,
         brief=brief,
         gap_brief=gap_brief,
+        honesty_constraints=honesty_constraints,
     )
     email.to = prospect.email
 
@@ -232,8 +235,12 @@ async def handle_email_reply(
     brief = prospect.hiring_signal_brief
     segment = brief.icp_segment.value if brief else "unknown"
 
+    # Gate: build constraints from brief before LLM call
+    honesty_constraints = build_constraints(brief, prospect.competitor_gap_brief) if brief else ""
+    gated_system_prompt = (honesty_constraints + "\n" + SYSTEM_PROMPT) if honesty_constraints else SYSTEM_PROMPT
+
     conversation = [
-        {"role": "system", "content": SYSTEM_PROMPT},
+        {"role": "system", "content": gated_system_prompt},
         {
             "role": "user",
             "content": (

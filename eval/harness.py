@@ -162,8 +162,11 @@ def run_tau2_trial(
         return []
 
     for sim in data.get("simulations", []):
+        if sim is None:
+            continue
         task_id = str(sim.get("task_id", "unknown"))
-        reward = sim.get("reward_info", {}).get("reward", 0)
+        reward_info = sim.get("reward_info") or {}
+        reward = reward_info.get("reward", 0)
         passed = reward >= 1.0
         trace_id = sim.get("id", str(uuid.uuid4()))
 
@@ -184,8 +187,8 @@ def run_tau2_trial(
             "timestamp": datetime.utcnow().isoformat(),
             "model": model,
             "domain": domain,
-            "duration_s": sim.get("duration"),
-            "termination_reason": sim.get("termination_reason"),
+            "duration_s": sim.get("duration") if sim else None,
+            "termination_reason": sim.get("termination_reason") if sim else None,
         })
 
     return results

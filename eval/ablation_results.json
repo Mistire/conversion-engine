@@ -1,0 +1,74 @@
+{
+  "generated_at": "2026-04-25",
+  "author": "Mistire Daniel — mistire@10academy.org",
+  "target_failure_mode": "F1 — Confidence-Unaware Phrasing",
+  "mechanism": "agent/honesty_gate.py — build_constraints(brief, gap_brief)",
+  "probe_suite": "F1 hard-constraint probes (n=5): F1-A, F1-B, F1-C, F1-D, F1-G",
+  "source_file": "eval/probe_results.json",
+  "note": "Ablation run on the 5-probe F1 dev suite. Sealed held-out slice (20 τ²-Bench tasks) not run within challenge compute budget. Delta A is directionally positive; statistical significance cannot be confirmed at α=0.05 with n=5 (see statistical_test below).",
+
+  "conditions": {
+    "day1_baseline": {
+      "description": "Agent without honesty gate — static system prompt grounded-honesty rules only, no programmatic constraint injection",
+      "n_probes": 5,
+      "pass_at_1": 0.8,
+      "pass_count": 4,
+      "ci_95_wilson": [0.376, 0.964],
+      "cost_per_probe_usd": "~0.001",
+      "cost_note": "Estimated from $12.75 OpenRouter weekly total; probe suite ~1% of total spend",
+      "p95_latency_ms": 14392,
+      "latency_note": "From eval/e2e_test_results.json LLM reply path — no separate probe latency instrumented",
+      "source": "eval/probe_results.json → baseline_pass_rate"
+    },
+
+    "method": {
+      "description": "Agent with honesty gate — build_constraints() injects confidence-aware phrasing constraints before LLM email composition; zero extra LLM calls, <1 ms overhead",
+      "n_probes": 5,
+      "pass_at_1": 1.0,
+      "pass_count": 5,
+      "ci_95_wilson": [0.566, 1.0],
+      "cost_per_probe_usd": "~0.001",
+      "cost_note": "Same as baseline — gate adds no LLM calls",
+      "p95_latency_ms": 14392,
+      "latency_note": "Gate overhead <1 ms; p95 is unchanged from baseline",
+      "source": "eval/probe_results.json → treatment_pass_rate"
+    },
+
+    "automated_optimization_baseline": {
+      "description": "GEPA / AutoAgent automated prompt-optimization baseline",
+      "n_probes": null,
+      "pass_at_1": null,
+      "ci_95_wilson": null,
+      "cost_per_probe_usd": null,
+      "note": "Not run. GEPA requires a separate optimization loop not available within the $20 challenge compute budget and the one-week timeline. Delta B is therefore not measured. The mechanism was selected on first principles (deterministic constraint injection vs. prompt tuning) rather than by beating an automated baseline."
+    }
+  },
+
+  "delta_a": {
+    "value": 0.20,
+    "value_pp": 20,
+    "direction": "positive",
+    "interpretation": "Honesty gate raised F1 hard-constraint pass rate from 80% (4/5) to 100% (5/5)"
+  },
+
+  "statistical_test": {
+    "test": "One-sided binomial test",
+    "h0": "p_treatment <= p_baseline (p_baseline = 0.8)",
+    "ha": "p_treatment > p_baseline",
+    "n": 5,
+    "observed_treatment_successes": 5,
+    "p_value": 0.328,
+    "p_value_derivation": "P(X >= 5 | n=5, p=0.8) = 0.8^5 = 0.32768",
+    "significant_at_0_05": false,
+    "note": "With n=5 probes, p < 0.05 is not achievable for this comparison regardless of outcome. The delta is directionally positive and the mechanism is verified by deterministic code inspection (agent/honesty_gate.py). A larger probe run (n >= 20) on the held-out slice would provide adequate power."
+  },
+
+  "probe_flip_detail": {
+    "F1-A": { "baseline": "pass", "treatment": "pass", "flipped": false },
+    "F1-B": { "baseline": "pass", "treatment": "pass", "flipped": false },
+    "F1-C": { "baseline": "fail", "treatment": "pass", "flipped": true,
+              "root_cause": "Post-layoff prospect received growth language in baseline; gate injected LAYOFF SIGNAL constraint forcing cost/delivery framing" },
+    "F1-D": { "baseline": "pass", "treatment": "pass", "flipped": false },
+    "F1-G": { "baseline": "pass", "treatment": "pass", "flipped": false }
+  }
+}

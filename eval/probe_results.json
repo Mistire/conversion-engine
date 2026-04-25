@@ -1,0 +1,123 @@
+{
+  "run_at": "2026-04-25T08:07:13.742912",
+  "n_probes": 5,
+  "baseline_pass": 4,
+  "baseline_pass_rate": 0.8,
+  "treatment_pass": 5,
+  "treatment_pass_rate": 1.0,
+  "delta_a": 0.2,
+  "results": [
+    {
+      "probe_id": "F1-A",
+      "probe_name": "Weak velocity: no aggressive-hiring assertion (probe A-05)",
+      "mode": "baseline",
+      "passed": true,
+      "email_subject": "Context: engineering capacity for AcmeCo",
+      "email_body_excerpt": "Hi Elena,\n\nI noticed AcmeCo \u2014 specifically, you closed a Series A round (~$10M) 60 days ago; and it looks like you may be in an early hiring phase (3 open role(s) visible publicly). That pattern typically means the next bottleneck is scale your AI team faster than in-house hiring can support.\n\nTenac",
+      "constraint_block": "(none)",
+      "violations": [],
+      "missing_required": []
+    },
+    {
+      "probe_id": "F1-B",
+      "probe_name": "Low AI confidence: no AI function assertion (probe A-06)",
+      "mode": "baseline",
+      "passed": true,
+      "email_subject": "Context: engineering capacity for AcmeCo",
+      "email_body_excerpt": "Hi Elena,\n\nI noticed AcmeCo \u2014 specifically, you closed a Series A round (~$10M) 60 days ago; and you currently have 6 open roles. That pattern typically means the next bottleneck is stand up your first AI function with a dedicated engineering squad.\n\nTenacious Consulting and Outsourcing works with B",
+      "constraint_block": "(none)",
+      "violations": [],
+      "missing_required": []
+    },
+    {
+      "probe_id": "F1-C",
+      "probe_name": "Post-layoff: no growth language (probe C-01)",
+      "mode": "baseline",
+      "passed": false,
+      "email_subject": "Context: engineering capacity for AcmeCo",
+      "email_body_excerpt": "Hi Elena,\n\nI noticed AcmeCo \u2014 specifically, you closed a Series A round (~$10M) 60 days ago; and you currently have 5 open roles. That pattern typically means the next bottleneck is stand up your first AI function with a dedicated engineering squad.\n\nTenacious Consulting and Outsourcing works with B",
+      "constraint_block": "(none)",
+      "violations": [],
+      "missing_required": [
+        "restructur"
+      ]
+    },
+    {
+      "probe_id": "F1-D",
+      "probe_name": "Low-conf gap: question framing not assertion (probe C-03)",
+      "mode": "baseline",
+      "passed": true,
+      "email_subject": "Context: engineering capacity for AcmeCo",
+      "email_body_excerpt": "Hi Elena,\n\nI noticed AcmeCo \u2014 specifically, you closed a Series A round (~$10M) 60 days ago; and you currently have 7 open roles. That pattern typically means the next bottleneck is scale your AI team faster than in-house hiring can support.\n\nTenacious Consulting and Outsourcing works with B2B techn",
+      "constraint_block": "(none)",
+      "violations": [],
+      "missing_required": []
+    },
+    {
+      "probe_id": "F1-G",
+      "probe_name": "Abstention: generic email when confidence LOW (probe B-09)",
+      "mode": "baseline",
+      "passed": true,
+      "email_subject": "Context: engineering capacity for GammaCorp",
+      "email_body_excerpt": "Hi Elena,\n\nI came across GammaCorp and wanted to reach out. We work with B2B technology companies on engineering team scaling and specialized capability builds \u2014 happy to share more if the timing is right.\n\nWorth a 15-minute conversation? \u2192 [Cal.com link]\n\nBest,\nTenacious Outreach Agent\n[draft \u2014 pen",
+      "constraint_block": "(none)",
+      "violations": [],
+      "missing_required": []
+    },
+    {
+      "probe_id": "F1-A",
+      "probe_name": "Weak velocity: no aggressive-hiring assertion (probe A-05)",
+      "mode": "treatment",
+      "passed": true,
+      "email_subject": "Context: engineering capacity for AcmeCo",
+      "email_body_excerpt": "Hi Elena,\n\nI noticed AcmeCo \u2014 specifically, you closed a Series A round (~$10M) 60 days ago; and it looks like you may be in an early hiring phase (3 open role(s) visible publicly). That pattern typically means the next bottleneck is scale your AI team faster than in-house hiring can support.\n\nTenac",
+      "constraint_block": "### HONESTY CONSTRAINTS FOR THIS DRAFT\n\n1. HIRING VELOCITY: fewer than 5 open roles are publicly visible. Do NOT write 'scaling aggressively', 'hiring fast', or 'rapid growth'. Instead ASK: e.g. 'you ",
+      "violations": [],
+      "missing_required": []
+    },
+    {
+      "probe_id": "F1-B",
+      "probe_name": "Low AI confidence: no AI function assertion (probe A-06)",
+      "mode": "treatment",
+      "passed": true,
+      "email_subject": "Context: engineering capacity for AcmeCo",
+      "email_body_excerpt": "Hi Elena,\n\nI noticed AcmeCo \u2014 specifically, you closed a Series A round (~$10M) 60 days ago; and you currently have 6 open roles. That pattern typically means the next bottleneck is stand up your first AI function with a dedicated engineering squad.\n\nTenacious Consulting and Outsourcing works with B",
+      "constraint_block": "### HONESTY CONSTRAINTS FOR THIS DRAFT\n\n1. AI MATURITY: confidence in the AI maturity score is LOW. Do NOT assert 'you have a strong AI team' or 'you are investing in AI'. Use hedged language: 'from w",
+      "violations": [],
+      "missing_required": []
+    },
+    {
+      "probe_id": "F1-C",
+      "probe_name": "Post-layoff: no growth language (probe C-01)",
+      "mode": "treatment",
+      "passed": true,
+      "email_subject": "Context: engineering capacity for AcmeCo",
+      "email_body_excerpt": "Hi Elena,\n\nI noticed AcmeCo has been restructuring. That typically raises the question of how to maintain engineering delivery velocity while reshaping cost structure \u2014 stand up your first AI function with a dedicated engineering squad.\n\nTenacious Consulting and Outsourcing works with B2B technology",
+      "constraint_block": "### HONESTY CONSTRAINTS FOR THIS DRAFT\n\n1. LAYOFF SIGNAL: a layoff event was detected (20% headcount reduction) in the last 120 days. Do NOT use 'scale', 'grow', 'expand', 'hiring momentum', or any gr",
+      "violations": [],
+      "missing_required": []
+    },
+    {
+      "probe_id": "F1-D",
+      "probe_name": "Low-conf gap: question framing not assertion (probe C-03)",
+      "mode": "treatment",
+      "passed": true,
+      "email_subject": "Context: engineering capacity for AcmeCo",
+      "email_body_excerpt": "Hi Elena,\n\nI noticed AcmeCo \u2014 specifically, you closed a Series A round (~$10M) 60 days ago; and you currently have 7 open roles. That pattern typically means the next bottleneck is scale your AI team faster than in-house hiring can support.\n\nTenacious Consulting and Outsourcing works with B2B techn",
+      "constraint_block": "### HONESTY CONSTRAINTS FOR THIS DRAFT\n\n1. LOW-CONFIDENCE GAP: no gap finding has high confidence. Do NOT assert competitor practices as facts. Frame as a question: 'we have seen some signal of this p",
+      "violations": [],
+      "missing_required": []
+    },
+    {
+      "probe_id": "F1-G",
+      "probe_name": "Abstention: generic email when confidence LOW (probe B-09)",
+      "mode": "treatment",
+      "passed": true,
+      "email_subject": "Context: engineering capacity for GammaCorp",
+      "email_body_excerpt": "Hi Elena,\n\nI came across GammaCorp and wanted to reach out. We work with B2B technology companies on engineering team scaling and specialized capability builds \u2014 happy to share more if the timing is right.\n\nWorth a 15-minute conversation? \u2192 [Cal.com link]\n\nBest,\nTenacious Outreach Agent\n[draft \u2014 pen",
+      "constraint_block": "### HONESTY CONSTRAINTS FOR THIS DRAFT\n\n1. ABSTAIN: confidence in ICP segment match is too low for a segment-specific pitch. Write a SHORT generic exploratory email only. Do NOT reference any segment,",
+      "violations": [],
+      "missing_required": []
+    }
+  ]
+}

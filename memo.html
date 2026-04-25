@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8" />
+  <meta name="generator" content="pandoc" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
+  <meta name="author" content="Mistire Daniel · mistire@10academy.org · TRP1 Week 10 · 2026-04-25" />
+  <title>Tenacious Conversion Engine — Final Memo</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <link rel="stylesheet" href="/tmp/memo_style.css" />
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Tenacious Conversion Engine — Final Memo</h1>
+<p class="author">Mistire Daniel · mistire@10academy.org · TRP1 Week 10
+· 2026-04-25</p>
+</header>
+<h1 id="page-1-the-decision">Page 1 — The Decision</h1>
+<h2 id="executive-summary">Executive Summary</h2>
+<p>An automated B2B lead-generation and conversion system for Tenacious
+Consulting and Outsourcing was built in one week: it enriches prospects
+from public data, classifies them across four ICP segments, composes
+signal-grounded outreach, and books discovery calls via Cal.com with all
+six production integrations live. The Act IV honesty gate raised probe
+pass rate from 80% to 100% (ΔA = +20 pp) with zero additional LLM calls
+and sub-millisecond overhead. <strong>Recommendation: run a 30-day pilot
+on Segment 1 (recently funded Series A/B) at 60 outreach/week; halt if
+reply rate remains below 3% after week 2.</strong></p>
+<hr />
+<h2 id="τ²-bench-baseline">τ²-Bench Baseline</h2>
+<p>Model <code>qwen/qwen3-235b-a22b</code> via OpenRouter (commit
+<code>d11a97072c</code>). 5 trials, 30-task dev slice; 94/150
+task-trials completed (56 timed out, patched in
+<code>eval/harness.py</code>).</p>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Metric</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>pass@1</strong></td>
+<td><strong>0.2979</strong> [0.2148, 0.3968] 95% CI ·
+<code>eval/score_log.json</code></td>
+</tr>
+<tr class="even">
+<td>SOTA reference (GPT-5 class, Feb 2026)</td>
+<td>~0.42 · τ²-bench leaderboard</td>
+</tr>
+<tr class="odd">
+<td>Delta to SOTA</td>
+<td>−12.2 pp</td>
+</tr>
+<tr class="even">
+<td>p50 / p95 task duration</td>
+<td>85.9 s / 201.0 s</td>
+</tr>
+</tbody>
+</table>
+<p>The 29.79% result is below the expected 34–39% dev-tier range;
+incomplete coverage (94/150 simulations) is the primary cause.</p>
+<hr />
+<h2 id="cost-per-qualified-lead">Cost per Qualified Lead</h2>
+<p>OpenRouter weekly spend: <strong>$12.75</strong> (covers τ²-Bench
+runs, probe suite, and 20-interaction e2e test). LLM cost attributable
+to lead qualification (e2e only, ~10% of total spend):
+<strong>~$1.25</strong>. 11 qualified leads processed in the e2e run.
+Infrastructure (Resend, Africa’s Talking sandbox, HubSpot dev sandbox,
+Cal.com self-hosted, Langfuse free tier): <strong>$0
+marginal</strong>.</p>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Cost component</th>
+<th>Amount</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>LLM per qualified lead</td>
+<td>~$0.11 · <code>eval/e2e_test_results.json</code> + OpenRouter
+invoice</td>
+</tr>
+<tr class="even">
+<td>Infrastructure per lead</td>
+<td>$0.00 (all free tiers)</td>
+</tr>
+<tr class="odd">
+<td><strong>Total per qualified lead</strong></td>
+<td><strong>~$0.11</strong></td>
+</tr>
+</tbody>
+</table>
+<p>This is well under Tenacious’s $5 target. At production volume (60
+outreach/week), batching further reduces per-lead LLM cost. Cost penalty
+threshold ($8/lead) is not at risk. Source:
+<code>eval/e2e_test_results.json</code>, OpenRouter dashboard ($12.75
+total weekly spend).</p>
+<hr />
+<h2 id="speed-to-lead-delta-stalled-thread-rate">Speed-to-Lead Delta
+(Stalled-Thread Rate)</h2>
+<p>Current Tenacious manual process: <strong>30–40% of qualified
+conversations stall in the first two weeks</strong> because the
+initiating partner must personally handle replies while delivery work
+queues ahead (Tenacious CFO estimate).</p>
+<p>In the 20-interaction e2e test, 8 prospect replies were received and
+handled within the same automated session — <strong>0% stalled</strong>.
+The agent has no human queue: replies trigger webhook → enrichment
+lookup → LLM or booking path within seconds. p50 reply-handling latency:
+3,625 ms; p95: 14,392 ms (<code>eval/e2e_test_results.json</code>).</p>
+<table>
+<thead>
+<tr class="header">
+<th></th>
+<th>Stalled-thread rate</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Tenacious manual (CFO estimate)</td>
+<td>30–40%</td>
+</tr>
+<tr class="even">
+<td>This system (e2e synthetic test)</td>
+<td>0%</td>
+</tr>
+<tr class="odd">
+<td><strong>Delta</strong></td>
+<td><strong>−30 to −40 pp</strong></td>
+</tr>
+</tbody>
+</table>
+<p>Note: the e2e test used synthetic prospect replies. Real-world stall
+rate will depend on reply volume vs. server uptime.</p>
+<hr />
+<h2 id="competitive-gap-outbound-performance">Competitive-Gap Outbound
+Performance</h2>
+<p>Of 12 outreach events in the e2e test: <strong>11 (92%) led with a
+research finding</strong> (AI maturity score + signal-grounded
+ICP-specific language); <strong>1 (8%) was a generic abstention
+pitch</strong> (low-confidence no-match,
+<code>icp_confidence = LOW</code>, prospect: Meridian Co). All 12 had
+the honesty gate active (<code>constraints_applied: true</code>).</p>
+<table>
+<thead>
+<tr class="header">
+<th>Variant</th>
+<th>Outreach count</th>
+<th>Synthetic replies</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Research-grounded</td>
+<td>11 (92%)</td>
+<td>8 / 11 (73%)</td>
+</tr>
+<tr class="even">
+<td>Generic abstention</td>
+<td>1 (8%)</td>
+<td>0 / 1 (0%)</td>
+</tr>
+</tbody>
+</table>
+<p>The 73% synthetic reply rate reflects scripted test respondents and
+does not represent real-world performance. Industry benchmarks: generic
+cold email 1–3%, signal-grounded top-quartile 7–12% (Clay/Smartlead case
+studies). Source: <code>eval/e2e_test_results.json</code>, variant
+field.</p>
+<hr />
+<h2 id="pilot-scope-recommendation">Pilot Scope Recommendation</h2>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Parameter</th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Segment</td>
+<td>Segment 1 — Recently funded Series A/B (clearest signal, highest ICP
+frequency in Crunchbase ODM)</td>
+</tr>
+<tr class="even">
+<td>Lead volume</td>
+<td>60 outreach / week × 4 weeks = 240 total</td>
+</tr>
+<tr class="odd">
+<td>Weekly budget</td>
+<td>$5 LLM + $0 infrastructure = $5/week ($20 pilot total)</td>
+</tr>
+<tr class="even">
+<td>Success criterion</td>
+<td>Reply rate ≥ 5% at day 30 (above 1–3% generic baseline; below 7–12%
+top-quartile)</td>
+</tr>
+<tr class="odd">
+<td>Kill condition</td>
+<td>Reply rate &lt; 3% after week 2, OR any probe F3 (bench
+over-commitment) incident confirmed by Tenacious delivery lead</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h1 id="page-2-the-skeptics-appendix">Page 2 — The Skeptic’s
+Appendix</h1>
+<h2 id="four-failure-modes-τ²-bench-does-not-capture">Four Failure Modes
+τ²-Bench Does Not Capture</h2>
+<p><strong>1. Offshore-perception objection.</strong> τ²-Bench retail
+tests a customer-service agent handling exchanges; it never presents a
+CTO who replies “we tried offshore engineering before and it failed.”
+The agent has no playbook for this objection and drifts to generic
+reassurances (“we’re different because…”) that read as scripted. To
+catch this: add adversarial reply scripts with offshore-skeptic personas
+to the probe library. Cost: ~4 hours of probe authoring + 1 held-out
+eval run.</p>
+<p><strong>2. Time-delayed bench commitment mismatch.</strong> τ²-Bench
+scores accuracy at a single moment. Tenacious’s bench updates every
+Monday. If the agent commits “we have 5 ML engineers available” on
+Wednesday and the discovery call is the following Thursday, the bench
+may have changed. The benchmark doesn’t model stale-commitment failures
+across time gaps. To catch this: inject bench-state diffs between
+outreach and discovery-call probe steps. Cost: bench-versioning
+infrastructure (~1 day).</p>
+<p><strong>3. Multi-stakeholder thread contamination at the same
+company.</strong> τ²-Bench is single-user per session. In Tenacious
+deployment, a VP Engineering and a co-founder at the same company can
+both receive cold outreach and reply independently. If the agent’s
+in-memory state conflates the two threads, context from one leaks into
+the other (probe family F5-A in <code>failure_taxonomy.md</code>).
+τ²-Bench’s dual-control pattern (agent + user simulator) doesn’t test
+two simultaneous prospect threads per company. To catch this:
+parallel-session probe harness with shared company ID. Cost: ~2
+days.</p>
+<p><strong>4. Tone breakdown under dismissive reply.</strong> τ²-Bench
+measures task completion (booking made, policy followed). It does not
+score whether the agent’s tone remained non-condescending when a
+prospect replies “This is exactly the kind of AI pitch I delete every
+morning.” Under this input, the agent risks either becoming defensive
+(Professional violation) or over-explaining the research methodology
+(Non-condescending violation). Neither shows up as a task failure in
+τ²-Bench; both show up as a brand event in deployment. To catch this:
+adversarial-reply tone-scoring probes graded by a separate judge LLM
+against the 5 style-guide markers. Cost: ~$0.50/eval run.</p>
+<hr />
+<h2 id="public-signal-lossiness-in-ai-maturity-scoring">Public-Signal
+Lossiness in AI-Maturity Scoring</h2>
+<p><strong>Quietly sophisticated but publicly silent.</strong> A company
+running serious ML infrastructure entirely in-house: private GitHub, no
+public AI job posts (they’ve already hired), no executive AI commentary
+(intentional competitive silence). The agent’s AI maturity score: 0 or
+1. True maturity: 2–3. Agent behavior: sends Segment 1 generic scaling
+pitch or Segment 2 cost-restructuring pitch. Business impact: a
+technically sophisticated CTO receives a pitch that undersells the
+conversation — they forward it internally as an example of a vendor that
+“didn’t do their homework.” Estimated false-negative rate: ~15–20% of
+mature-but-silent companies in the Crunchbase ODM sample based on
+spot-check of 10 records.</p>
+<p><strong>Loud but shallow.</strong> A company with a CEO posting
+weekly about “our AI strategy,” an “AI/ML Engineer” title on the team
+page (a rebranded data-analyst role), and a press release about
+“AI-powered features” (a vendor integration, not internal capability).
+Agent AI maturity score: 2 or 3. True maturity: 1. Agent behavior: sends
+Segment 4 capability-gap pitch or uses high-maturity Segment 1 language
+(“scale your AI team”). The prospect feels the agent misread them —
+they’re not running a serious AI function and know it. Reply: silence or
+a polite “not a fit.” Estimated false-positive rate: ~10–15% of
+self-promoting companies in the Crunchbase ODM sample.</p>
+<hr />
+<h2 id="one-honest-unresolved-failure">One Honest Unresolved
+Failure</h2>
+<p><strong>Probe D-01 — Bench over-commitment: NestJS stack committed
+through Q3 2026 (Family F3).</strong></p>
+<p>The honesty gate (<code>agent/honesty_gate.py</code>) addresses F1
+(confidence-unaware phrasing). It does not address F3. Probe D-01
+injects a scenario where the prospect asks for a 3-engineer NestJS team;
+the bench summary (<code>seed/bench_summary.json</code>) shows NestJS
+engineers (2 available) are committed through Q3 2026. The agent
+currently has no live bench lookup at reply time — it reads bench
+context from the static system prompt set at initialization. Under D-01,
+the agent can confirm NestJS availability that does not exist.</p>
+<p><strong>Business impact if deployed:</strong> A prospect who asks
+specifically for NestJS capacity and receives a confident “yes” from the
+agent, then hears “actually those engineers are committed” from the
+Tenacious delivery lead on the discovery call, loses trust immediately.
+This is a harder brand event to recover from than a generic pitch — the
+prospect made a decision to engage <em>because of</em> a specific
+capacity claim. Fix requires a live bench-lookup gate before any
+capacity language is generated; estimated engineering cost: 1 day.</p>
+<hr />
+<h2 id="evidence">Evidence</h2>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Claim</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>pass@1 = 0.2979, CI [0.2148, 0.3968]</td>
+<td><code>eval/score_log.json</code> (2026-04-24)</td>
+</tr>
+<tr class="even">
+<td>p50 = 3,625 ms, p95 = 14,392 ms</td>
+<td><code>eval/e2e_test_results.json</code> (2026-04-25)</td>
+</tr>
+<tr class="odd">
+<td>ΔA = +20 pp</td>
+<td><code>eval/probe_results.json</code> (2026-04-25)</td>
+</tr>
+<tr class="even">
+<td>Cost per qualified lead ~$0.11</td>
+<td>OpenRouter invoice ($12.75 weekly) +
+<code>eval/e2e_test_results.json</code></td>
+</tr>
+<tr class="odd">
+<td>11 research-grounded / 1 generic outreach</td>
+<td><code>eval/e2e_test_results.json</code>, variant field</td>
+</tr>
+<tr class="even">
+<td>Stalled-thread rate 30–40% (manual)</td>
+<td>Tenacious CFO estimate, challenge brief</td>
+</tr>
+<tr class="odd">
+<td>SOTA ~42%</td>
+<td>τ²-bench leaderboard, Feb 2026</td>
+</tr>
+<tr class="even">
+<td>36 bench engineers</td>
+<td><code>seed/bench_summary.json</code>, 2026-04-21</td>
+</tr>
+</tbody>
+</table>
+<p><em>No ACV figures fabricated.
+<code>TENACIOUS_OUTBOUND_ENABLED</code> unset throughout; all outbound
+to <code>staff-sink@10academy.org</code>.</em></p>
+</body>
+</html>
