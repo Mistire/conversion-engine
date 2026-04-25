@@ -141,7 +141,62 @@ All claims in the memo resolve to one of:
 
 ---
 
-## 6. Limitations
+## 6. Ablation Variants
+
+Three variants are defined to isolate the contribution of each gate component. Each variant differs in exactly one documented dimension so that the observed ΔA can be attributed to a specific design choice rather than the mechanism as a whole.
+
+---
+
+### Variant 0 — Baseline (gate fully disabled)
+
+**What it does:** `honesty_constraints` is forced to `""` for every `compose_outbound_email()` call regardless of brief contents. The abstention path is also disabled: even `icp_confidence=LOW` prospects receive a segment-specific pitch.
+
+**Code change:** Pass `honesty_constraints=""` and temporarily patch `should_abstain()` to always return `False`.
+
+**What it isolates:** The raw template behavior — what the agent produces with zero programmatic enforcement beyond the static `SYSTEM_PROMPT`. This is the counterfactual "what if the gate never existed."
+
+**Expected result:** Fails on F1-C (layoff growth language), F1-G (abstention), and likely F1-A/F1-B under adversarial prompts. Establishes the true floor ΔA denominator.
+
+---
+
+### Variant 1 — Gate active, abstention path disabled
+
+**What it does:** All F1-A through F1-F constraints fire normally (velocity, AI maturity, layoff guard, stack hedge, stale brief, gap confidence). Only the abstention path (`F1-G`) is disabled — `should_abstain()` returns `False` unconditionally, so low-confidence prospects still receive segment-specific language.
+
+**Code change:** Patch `should_abstain()` to return `False`; leave `build_constraints()` otherwise unchanged.
+
+**What it isolates:** The contribution of the non-abstention constraints (F1-A through F1-F) independently of the abstention rule. If Variant 1 scores the same as Variant 0 on F1-G probes but higher on F1-A–F1-F probes, the constraint block is working and only the abstention gate adds the F1-G improvement.
+
+**Expected result:** F1-C flips (layoff guard fires), F1-G fails (no abstention). ΔA vs Variant 0 ≈ +10–15 pp from constraint block alone.
+
+---
+
+### Variant 2 — Gate active, constraints relaxed to advisory (no ABSTAIN escalation)
+
+**What it does:** All constraints fire and `should_abstain()` works correctly — but the `ABSTAIN` keyword is replaced with `PREFER GENERIC: consider a generic approach when confidence is low`. The LLM is advised to use generic framing but is not hard-blocked from using segment language.
+
+**Code change:** In `honesty_gate.py`, change `"ABSTAIN: confidence in ICP segment match is too low..."` to `"PREFER GENERIC: confidence in ICP segment match is low — generic framing preferred but not required."` Do not change the `use_abstain` branch in `email_handler.py` (it only triggers on the literal "ABSTAIN" string, so it becomes inert).
+
+**What it isolates:** Whether the hard-block abstention path (short-circuit in `email_handler.py`) adds value beyond the advisory constraint. If F1-G still passes in Variant 2, the LLM is self-regulating correctly on the advisory. If it fails, the hard-block is load-bearing.
+
+**Expected result:** F1-G likely fails (LLM ignores advisory under adversarial prompts). This demonstrates that the hard-block path in `compose_outbound_email()` is necessary, not just the injected constraint text.
+
+---
+
+### Variant comparison table
+
+| Variant | Abstain hard-block | F1-A–F1-F constraints | Expected F1-G | Expected F1-C | Δ vs Variant 0 |
+| --- | --- | --- | --- | --- | --- |
+| 0 — Baseline | ✗ disabled | ✗ disabled | FAIL | FAIL | 0 pp (floor) |
+| 1 — Constraints only | ✗ disabled | ✓ active | FAIL | PASS | ~+10–15 pp |
+| 2 — Advisory abstain | advisory only | ✓ active | likely FAIL | PASS | ~+10–15 pp |
+| Full — Treatment | ✓ hard-block | ✓ active | PASS | PASS | +20 pp (measured) |
+
+The gap between Variant 1 and Full isolates the value of the hard abstention block. The gap between Variant 2 and Full isolates the value of the hard-block keyword over the advisory framing.
+
+---
+
+## 7. Limitations
 
 1. **Probe suite is small.** Five probes cover the F1 family but not F2–F5. A full 40-probe run would give a more robust overall ΔA.
 

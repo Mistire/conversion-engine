@@ -28,15 +28,37 @@ The 29.79% result is below the expected 34–39% dev-tier range; incomplete cove
 
 ## Cost per Qualified Lead
 
-OpenRouter weekly spend: **$12.75** (covers τ²-Bench runs, probe suite, and 20-interaction e2e test). LLM cost attributable to lead qualification (e2e only, ~10% of total spend): **~$1.25**. 11 qualified leads processed in the e2e run. Infrastructure (Resend, Africa's Talking sandbox, HubSpot dev sandbox, Cal.com self-hosted, Langfuse free tier): **$0 marginal**.
+**Definition of "qualified lead":** A prospect counts as qualified when all three conditions are met: (1) the enrichment pipeline ran to completion — all four signal modules (Crunchbase, layoffs.fyi, job-post velocity, leadership) were attempted; (2) ICP classification returned `icp_confidence ≥ MEDIUM` and `icp_segment ≠ NO_MATCH`; (3) a research-grounded email was composed (`variant = research_grounded`). In the e2e run, 11 of 12 prospects met this bar. The 12th (Meridian Co) was classified `NO_MATCH / LOW` confidence and received a generic abstention email — it is excluded from the qualified count and from all per-lead cost calculations.
 
-| Cost component | Amount |
-|---|---|
-| LLM per qualified lead | ~$0.11 · `eval/e2e_test_results.json` + OpenRouter invoice |
-| Infrastructure per lead | $0.00 (all free tiers) |
-| **Total per qualified lead** | **~$0.11** |
+**OpenRouter spend breakdown:** Total weekly spend: **$12.75**. Attribution:
 
-This is well under Tenacious's $5 target. At production volume (60 outreach/week), batching further reduces per-lead LLM cost. Cost penalty threshold ($8/lead) is not at risk. Source: `eval/e2e_test_results.json`, OpenRouter dashboard ($12.75 total weekly spend).
+| OpenRouter spend bucket | Amount | % of total |
+| --- | --- | --- |
+| τ²-Bench runs (150 task-trials) | ~$11.50 | 90% |
+| e2e test LLM reply calls (8 replies × ~2 LLM calls each) | ~$1.25 | 10% |
+| Probe suite eval | $0.00 | 0% (deterministic — no LLM calls) |
+
+**Enrichment cost breakdown (distinct from LLM):** Enrichment runs once per prospect before any LLM call. In the challenge-week configuration all four signal sources use local CSV snapshots or public-page scraping — no paid API calls. Production cost estimates are shown for comparison.
+
+| Enrichment signal | Challenge-week cost | Production cost estimate |
+| --- | --- | --- |
+| Crunchbase firmographics + funding | $0.00 (local CSV snapshot) | $0.001–$0.005/lookup (Crunchbase Basic API) |
+| layoffs.fyi event lookup | $0.00 (local CSV snapshot) | $0.000 (public dataset, freely downloadable) |
+| Job-post velocity scraping | $0.00 (Playwright, public pages, robots.txt-safe) | ~$0.001/page (bandwidth + Playwright infra) |
+| Leadership change signal | $0.00 (Crunchbase description heuristic) | $0.001–$0.002/lookup (press-release scrape) |
+| **Enrichment total per lead** | **$0.00** | **~$0.003–$0.008** |
+
+**All-in cost per qualified lead:**
+
+| Cost component | Challenge-week | Production estimate |
+| --- | --- | --- |
+| Enrichment (all 4 signals) | $0.00 | ~$0.005 |
+| LLM — outreach composition | $0.00 (template path, no LLM) | $0.00 |
+| LLM — reply handling (~$1.25 / 11 leads) | ~$0.11 | ~$0.11 |
+| Infrastructure (Resend, HubSpot, Cal.com, Langfuse) | $0.00 (free tiers) | ~$0.02 (Resend send credits) |
+| **Total per qualified lead** | **~$0.11** | **~$0.14** |
+
+Both challenge-week and production estimates are well under the $5 target. The cost penalty threshold ($8/lead) is not at risk even at 10× production volume, because enrichment costs are sub-cent and LLM spend scales linearly with replies (not outreach volume). Source: `eval/e2e_test_results.json`, OpenRouter dashboard ($12.75 total weekly spend).
 
 ---
 

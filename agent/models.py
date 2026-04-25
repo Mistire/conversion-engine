@@ -128,3 +128,30 @@ class ConversationTurn(BaseModel):
     content: str
     timestamp: str = Field(default_factory=lambda: datetime.utcnow().isoformat())
     trace_id: Optional[str] = None
+
+
+class SignalResult(BaseModel):
+    """
+    Typed container returned by every signal module in agent/signals/.
+
+    Every signal in the merged HiringSignalBrief must be traceable to a
+    SignalResult so reviewers can verify timestamp, source, and confidence
+    without reading the raw signal module code.
+
+    Fields:
+        signal_type   — one of: crunchbase_funding, layoffs_fyi, job_posts,
+                        leadership_change
+        company_name  — the company this result applies to
+        timestamp_utc — ISO 8601 UTC at moment of acquisition
+        source        — URL or file path used to produce this result
+        confidence    — HIGH / MEDIUM / LOW
+        data          — signal-specific payload (FundingEvent, LayoffEvent, etc.)
+        error         — non-empty when acquisition failed; empty on success
+    """
+    signal_type: str
+    company_name: str
+    timestamp_utc: str = Field(default_factory=lambda: datetime.utcnow().isoformat())
+    source: str = ""
+    confidence: Confidence = Confidence.LOW
+    data: dict = Field(default_factory=dict)
+    error: str = ""
